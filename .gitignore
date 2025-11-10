@@ -1,0 +1,36 @@
+# ======================
+# Archivos de datos (no subir datasets grandes)
+# ======================
+data/
+
+# ======================
+# Entornos virtuales
+# ======================
+.venv/
+venv/
+env/
+
+# ======================
+# Archivos Python compilados
+# ======================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ======================
+# Archivos temporales de Jupyter
+# ======================
+.ipynb_checkpoints/
+
+# ======================
+# Archivos del sistema
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Tokens o configuraciones privadas
+# ======================
+*.env
+kaggle.json
