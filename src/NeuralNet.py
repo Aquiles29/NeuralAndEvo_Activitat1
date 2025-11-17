@@ -53,23 +53,30 @@ class NeuralNet:
 
     # ===================== Forward propagation =====================
     def _forward(self, x_sample):
-        self.xi[0] = x_sample  # capa de entrada
+        self.xi[0] = x_sample  # input layer
         for l in range(1, self.L):
             self.h[l] = np.dot(self.w[l-1], self.xi[l-1]) - self.theta[l-1]
             self.xi[l] = self._activate(self.h[l])
-        return self.xi[-1]
+        return float(self.xi[-1])  # ensure output is scalar
 
     # ===================== Backpropagation =====================
     def _backprop(self, y_sample):
-        # Calcular delta de la capa de salida
-        self.delta[-1] = (y_sample - self.xi[-1]) * self._derivative(self.h[-1])
-        # Backprop hacia capas ocultas
+        # Compute delta for output layer (force scalar)
+        delta_out = float(y_sample) - float(self.xi[-1])
+        self.delta[-1] = delta_out * self._derivative(self.h[-1])
+
+        # Backpropagate to hidden layers
         for l in reversed(range(1, self.L-1)):
             self.delta[l] = self._derivative(self.h[l]) * np.dot(self.w[l].T, self.delta[l+1])
-        # Actualizar pesos y thresholds
+
+        # Update weights and thresholds
         for l in range(self.L-1):
             d_w_new = self.lr * np.outer(self.delta[l+1], self.xi[l]) + self.momentum * self.d_w_prev[l]
-            d_theta_new = -self.lr * self.delta[l+1] + self.momentum * self.d_theta_prev[l]
+            d_theta_new = self.lr * self.delta[l+1] + self.momentum * self.d_theta_prev[l]
+
+            # Optional: clip gradients to prevent exploding
+            d_w_new = np.clip(d_w_new, -1, 1)
+            d_theta_new = np.clip(d_theta_new, -1, 1)
 
             self.w[l] += d_w_new
             self.theta[l] += d_theta_new
@@ -79,7 +86,7 @@ class NeuralNet:
 
     # ===================== Entrenamiento =====================
     def fit(self, X, y):
-        # Dividir dataset en train/validation
+        # Split dataset into train/validation
         if self.val_percent > 0:
             idx = np.arange(len(X))
             np.random.shuffle(idx)
@@ -92,20 +99,26 @@ class NeuralNet:
             X_val, y_val = None, None
 
         for epoch in range(self.epochs):
+            # Shuffle training data each epoch
+            idx = np.arange(len(X_train))
+            np.random.shuffle(idx)
+            X_train, y_train = X_train[idx], y_train[idx]
+
             mse_epoch = 0
             for i in range(len(X_train)):
                 self._forward(X_train[i])
                 self._backprop(y_train[i])
-                mse_epoch += (y_train[i] - self.xi[-1])**2
+                mse_epoch += (float(y_train[i]) - float(self.xi[-1]))**2
+
             mse_epoch /= len(X_train)
             self.train_errors.append(mse_epoch)
 
-            # Error validación
+            # Validation error
             if X_val is not None:
                 val_mse = 0
                 for i in range(len(X_val)):
                     y_pred = self._forward(X_val[i])
-                    val_mse += (y_val[i] - y_pred)**2
+                    val_mse += (float(y_val[i]) - float(y_pred))**2
                 val_mse /= len(X_val)
                 self.val_errors.append(val_mse)
 
@@ -113,7 +126,7 @@ class NeuralNet:
     def predict(self, X):
         y_pred = np.zeros(len(X))
         for i in range(len(X)):
-            y_pred[i] = self._forward(X[i])
+            y_pred[i] = float(self._forward(X[i]))  # ensure scalar
         return y_pred
 
     # ===================== Errores por época =====================
