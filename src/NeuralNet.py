@@ -1,17 +1,6 @@
 import numpy as np
 
 class NeuralNet:
-    """
-    Vectorized multilayer perceptron with backpropagation (NumPy).
-    Compatible with the assignment variable names:
-      L, n, h, xi, w, theta, delta, d_w, d_theta, d_w_prev, d_theta_prev, fact
-
-    Public methods:
-      - fit(X, y)     : train on (X,y). X: (N, D), y: (N,) or (N,1)
-      - predict(X)    : return predictions (N,) in the original target scale
-      - loss_epochs() : returns np.array shape (n_epochs, 2) with [train_mse, val_mse]
-    """
-
     def __init__(self, n_layers, n_units, epochs=100, lr=1e-3, momentum=0.0,
                  activation='sigmoid', val_percent=0.2, batch_size=32, seed=None, shuffle=True):
         assert n_layers == len(n_units), "n_layers must match length of n_units"
@@ -37,7 +26,7 @@ class NeuralNet:
         self.delta = [None for _ in range(self.L)]
 
         # Weights: w[l] corresponds to connections (layer l-1) -> (layer l)
-        # We'll store w as list index 1..L-1 (pad index 0 with None to match notation)
+        # We'll store w as list index 1..L-1 
         self.w = [None] + [
             self.rng.randn(self.n[l], self.n[l-1]) * np.sqrt(2.0 / max(1, self.n[l-1]))
             for l in range(1, self.L)
@@ -90,11 +79,6 @@ class NeuralNet:
 
     # ---------------- Vectorized forward pass ----------------
     def _forward_batch(self, X_batch):
-        """
-        Forward pass for a batch X_batch: shape (B, D)
-        Populates self.h and self.xi for this batch (lists of arrays).
-        Returns output activations a_L shape (B, n_L)
-        """
         B = X_batch.shape[0]
         self.xi[0] = X_batch  # shape (B, n0)
         for l in range(1, self.L):
@@ -108,11 +92,6 @@ class NeuralNet:
 
     # ---------------- Vectorized backward pass and parameter update ----------------
     def _backprop_batch(self, y_batch):
-        """
-        y_batch shape: (B,) or (B,1) or (B,n_L). This assumes single-output regression (n_L == 1).
-        Uses MSE loss: loss = mean( (y_pred - y)^2 )
-        Computes gradients vectorized on the batch and updates weights.
-        """
         # Ensure y_batch shape (B, n_L)
         y_arr = np.array(y_batch)
         if y_arr.ndim == 1:
@@ -162,11 +141,6 @@ class NeuralNet:
 
     # ---------------- Training (fit) ----------------
     def fit(self, X, y):
-        """
-        X: array (N, D)
-        y: array (N,) or (N,1)
-        Trains the network, stores train_errors and val_errors per epoch.
-        """
         X_arr = np.asarray(X, dtype=float)
         y_arr = np.asarray(y, dtype=float).reshape(-1, 1)  # (N,1)
 
